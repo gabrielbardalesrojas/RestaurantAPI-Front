@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Restaurante - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .logo-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-error {
+            background-color: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <div class="logo-icon">🍽️</div>
+            <h1>Restaurant System</h1>
+            <p>Ingresa tu código de acceso</p>
+        </div>
+
+        <div class="alert alert-error" id="alert">
+            <span id="alertMessage"></span>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="codigo">Código de Acceso</label>
+                <input 
+                    type="text" 
+                    id="codigo" 
+                    name="codigo" 
+                    placeholder="Ingresa tu código"
+                    maxlength="8"
+                    required
+                    autocomplete="off"
+                >
+            </div>
+
+            <button type="submit" id="loginBtn">
+                Ingresar al Sistema
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Verificando...</p>
+        </div>
+
+        <div class="info-box">
+            <strong>💡 Tipos de código:</strong><br>
+            • Código de Mesa (8 caracteres) → Acceso Cliente<br>
+            • Código de Empleado → Acceso según rol
+        </div>
+    </div>
+
+    <script>
+        // URL base de tu API - CAMBIAR SEGÚN TU PUERTO
+        const API_URL = 'https://tu-app-name.fly.dev/api';
+
+        const loginForm = document.getElementById('loginForm');
+        const codigoInput = document.getElementById('codigo');
+        const loginBtn = document.getElementById('loginBtn');
+        const alert = document.getElementById('alert');
+        const alertMessage = document.getElementById('alertMessage');
+        const loading = document.getElementById('loading');
+
+        // Función para mostrar alertas
+        function showAlert(message, type = 'error') {
+            alertMessage.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Función para guardar datos en localStorage
+        function saveUserData(data) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('tipoUsuario', data.tipoUsuario);
+            localStorage.setItem('nombreCompleto', data.nombreCompleto);
+            localStorage.setItem('email', data.email);
+            localStorage.setItem('roles', JSON.stringify(data.roles));
+            
+            if (data.mesaId) {
+                localStorage.setItem('mesaId', data.mesaId);
+                localStorage.setItem('numeroMesa', data.numeroMesa);
+            }
+        }
+
+        // Función para redirigir según el tipo de usuario
+        function redirectUser(tipoUsuario) {
+            const redirects = {
+                'Admin': 'admin.html',
+                'Mesero': 'mesero.html',
+                'Cocinero': 'cocinero.html',
+                'Cajero': 'cajero.html',
+                'Cliente': 'cliente.html'
+            };
+
+            const page = redirects[tipoUsuario];
+            
+            if (page) {
+                showAlert('¡Acceso concedido! Redirigiendo...', 'success');
+                setTimeout(() => {
+                    window.location.href = page;
+                }, 1000);
+            } else {
+                showAlert('Tipo de usuario no reconocido');
+            }
+        }
+
+        // Manejar el envío del formulario
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const codigo = codigoInput.value.trim().toUpperCase();
+
+            if (!codigo) {
+                showAlert('Por favor ingresa tu código');
+                return;
+            }
+
+            if (codigo.length !== 8) {
+                showAlert('El código debe tener 8 caracteres');
+                return;
+            }
+
+            // Mostrar loading
+            loginBtn.disabled = true;
+            loading.classList.add('show');
+            alert.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}/Auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ codigo: codigo })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Login exitoso
+                    saveUserData(data);
+                    redirectUser(data.tipoUsuario);
+                } else {
+                    // Error en el login
+                    showAlert(data.message || 'Código inválido o no encontrado');
+                    loginBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error al conectar con el servidor. Verifica que la API esté corriendo.');
+                loginBtn.disabled = false;
+            } finally {
+                loading.classList.remove('show');
+            }
+        });
+
+        // Convertir a mayúsculas mientras escribe
+        codigoInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+
+        // Verificar si ya hay una sesión activa
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('token');
+            const tipoUsuario = localStorage.getItem('tipoUsuario');
+            
+            if (token && tipoUsuario) {
+                redirectUser(tipoUsuario);
+            }
+        });
+    </script>
+</body>
+</html>

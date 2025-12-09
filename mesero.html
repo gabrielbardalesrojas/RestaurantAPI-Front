@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesero - Panel de Pedidos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #4CAF50;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+
+        .pedidos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .pedido-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .pedido-numero {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .pedido-mesa {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .pedido-info {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .pedido-detalles {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detalle-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .detalle-item:last-child {
+            border-bottom: none;
+        }
+
+        .detalle-nombre {
+            font-weight: 600;
+        }
+
+        .detalle-cantidad {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .pedido-total {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4CAF50;
+            text-align: right;
+            margin-bottom: 15px;
+        }
+
+        .pedido-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-edit {
+            flex: 1;
+            padding: 10px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-edit:hover {
+            background: #0b7dda;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-preparacion {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .producto-select {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .producto-select select {
+            flex: 2;
+        }
+
+        .producto-select input {
+            flex: 1;
+        }
+
+        .btn-add-producto {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .productos-seleccionados {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="user-info">
+                <h2>👔 Panel de Mesero</h2>
+                <p id="meseroInfo">Cargando...</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="actions">
+            <button class="btn" onclick="openNuevoPedido()">+ Nuevo Pedido</button>
+            <button class="btn" onclick="cargarPedidos()">🔄 Actualizar</button>
+        </div>
+
+        <div class="pedidos-grid" id="pedidosGrid">
+            <div class="loading">Cargando pedidos...</div>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Pedido -->
+    <div class="modal" id="nuevoPedidoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nuevo Pedido</h2>
+                <button class="close-btn" onclick="closeModal('nuevoPedidoModal')">×</button>
+            </div>
+            <form id="formNuevoPedido">
+                <div class="form-group">
+                    <label>Seleccionar Mesa</label>
+                    <select id="selectMesa" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Agregar Productos</label>
+                    <div class="producto-select">
+                        <select id="selectProducto"></select>
+                        <input type="number" id="cantidadProducto" min="1" value="1" placeholder="Cant.">
+                        <button type="button" class="btn-add-producto" onclick="agregarProducto()">+</button>
+                    </div>
+                </div>
+                <div class="productos-seleccionados" id="productosSeleccionados">
+                    <p style="color: #999; text-align: center;">No hay productos seleccionados</p>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <input type="text" id="observaciones" placeholder="Opcional">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Crear Pedido</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Pedido -->
+    <div class="modal" id="editarPedidoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Pedido</h2>
+                <button class="close-btn" onclick="closeModal('editarPedidoModal')">×</button>
+            </div>
+            <div id="editarPedidoContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://tu-app-name.fly.dev/api';
+        const token = localStorage.getItem('token');
+        const nombreCompleto = localStorage.getItem('nombreCompleto');
+        
+        let mesas = [];
+        let productos = [];
+        let productosCarrito = [];
+        let pedidoEditando = null;
+
+        if (!token || !['Mesero', 'Admin'].includes(localStorage.getItem('tipoUsuario'))) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('meseroInfo').textContent = `Bienvenido, ${nombreCompleto}`;
+
+        async function cargarPedidos() {
+            try {
+                const response = await fetch(`${API_URL}/Pedidos/mesero/pendientes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const pedidos = await response.json();
+                mostrarPedidos(pedidos);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('pedidosGrid').innerHTML = 
+                    '<div class="loading">Error al cargar pedidos</div>';
+            }
+        }
+
+        function mostrarPedidos(pedidos) {
+            const grid = document.getElementById('pedidosGrid');
+            
+            if (pedidos.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>No hay pedidos pendientes</h3>
+                        <p>Los pedidos aparecerán aquí cuando se creen</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = pedidos.map(pedido => `
+                <div class="pedido-card">
+                    <div class="pedido-header">
+                        <div class="pedido-numero">${pedido.numeroPedido}</div>
+                        <div class="pedido-mesa">${pedido.numeroMesa}</div>
+                    </div>
+                    <div class="pedido-info">
+                        <div class="info-row">
+                            <span class="info-label">Hora:</span>
+                            <span class="info-value">${new Date(pedido.fechaHoraPedido).toLocaleTimeString()}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Estado:</span>
+                            <span class="badge ${pedido.estado === 'Pendiente' ? 'badge-pendiente' : 'badge-preparacion'}">
+                                ${pedido.estado}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="pedido-detalles">
+                        ${pedido.detalles.map(d => `
+                            <div class="detalle-item">
+                                <span class="detalle-nombre">${d.productoNombre}</span>
+                                <span class="detalle-cantidad">x${d.cantidad}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="pedido-total">Total: S/. ${pedido.total.toFixed(2)}</div>
+                    ${pedido.estado === 'Pendiente' ? `
+                        <div class="pedido-actions">
+                            <button class="btn-edit" onclick="editarPedido(${pedido.id})">Editar Pedido</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function openNuevoPedido() {
+            await cargarMesas();
+            await cargarProductos();
+            productosCarrito = [];
+            document.getElementById('nuevoPedidoModal').classList.add('show');
+        }
+
+        async function cargarMesas() {
+            try {
+                const response = await fetch(`${API_URL}/Mesas`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                mesas = await response.json();
+                
+                const select = document.getElementById('selectMesa');
+                select.innerHTML = '<option value="">Seleccionar mesa...</option>' +
+                    mesas.filter(m => m.disponible).map(m => 
+                        `<option value="${m.id}">${m.numeroMesa}</option>`
+                    ).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function cargarProductos() {
+            try {
+                const response = await fetch(`${API_URL}/Productos`);
+                productos = await response.json();
+                
+                const select = document.getElementById('selectProducto');
+                select.innerHTML = '<option value="">Seleccionar producto...</option>' +
+                    productos.map(p => 
+                        `<option value="${p.id}" data-precio="${p.precio}">${p.nombre} - S/. ${p.precio}</option>`
+                    ).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function agregarProducto() {
+            const select = document.getElementById('selectProducto');
+            const cantidad = parseInt(document.getElementById('cantidadProducto').value);
+            
+            if (!select.value || cantidad < 1) {
+                alert('Selecciona un producto y cantidad válida');
+                return;
+            }
+
+            const producto = productos.find(p => p.id == select.value);
+            const existente = productosCarrito.find(p => p.id == producto.id);
+
+            if (existente) {
+                existente.cantidad += cantidad;
+            } else {
+                productosCarrito.push({
+                    id: producto.id,
+                    nombre: producto.nombre,
+                    precio: producto.precio,
+                    cantidad: cantidad
+                });
+            }
+
+            mostrarProductosSeleccionados();
+            select.value = '';
+            document.getElementById('cantidadProducto').value = 1;
+        }
+
+        function mostrarProductosSeleccionados() {
+            const container = document.getElementById('productosSeleccionados');
+            
+            if (productosCarrito.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center;">No hay productos seleccionados</p>';
+                return;
+            }
+
+            container.innerHTML = productosCarrito.map((p, i) => `
+                <div class="detalle-item">
+                    <span>${p.nombre} x${p.cantidad}</span>
+                    <span>S/. ${(p.precio * p.cantidad).toFixed(2)}
+                        <button onclick="quitarProducto(${i})" style="border:none;background:red;color:white;border-radius:4px;padding:2px 8px;margin-left:10px;cursor:pointer;">×</button>
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function quitarProducto(index) {
+            productosCarrito.splice(index, 1);
+            mostrarProductosSeleccionados();
+        }
+
+        document.getElementById('formNuevoPedido').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (productosCarrito.length === 0) {
+                alert('Agrega al menos un producto');
+                return;
+            }
+
+            const pedido = {
+                mesaId: parseInt(document.getElementById('selectMesa').value),
+                observaciones: document.getElementById('observaciones').value,
+                detalles: productosCarrito.map(p => ({
+                    productoId: p.id,
+                    cantidad: p.cantidad,
+                    observaciones: ""
+                }))
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/Pedidos/mesero`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(pedido)
+                });
+
+                if (response.ok) {
+                    alert('Pedido creado exitosamente');
+                    closeModal('nuevoPedidoModal');
+                    cargarPedidos();
+                } else {
+                    alert('Error al crear el pedido');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        });
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        cargarPedidos();
+        setInterval(cargarPedidos, 30000); // Actualizar cada 30 segundos
+    </script>
+</body>
+</html>

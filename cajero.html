@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cajero - Panel de Cobros</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #00b4db;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn {
+            padding: 12px 24px;
+            background: #00b4db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .pedidos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .pedido-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .pedido-card.cancelado {
+            opacity: 0.6;
+            background: #f8f8f8;
+        }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .pedido-numero {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .pedido-mesa {
+            background: #00b4db;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+        }
+
+        .pedido-info {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .pedido-detalles {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .detalle-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .detalle-item:last-child {
+            border-bottom: none;
+        }
+
+        .pedido-total {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00b4db;
+            text-align: center;
+            padding: 15px;
+            background: #e3f7ff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-cobrar {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-cobrar:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .badge-completado {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-cancelado {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .modal-total {
+            font-size: 48px;
+            font-weight: 700;
+            color: #00b4db;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .metodo-pago {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .metodo-btn {
+            padding: 20px;
+            background: #f8f8f8;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .metodo-btn:hover {
+            border-color: #00b4db;
+        }
+
+        .metodo-btn.selected {
+            background: #00b4db;
+            color: white;
+            border-color: #00b4db;
+        }
+
+        .metodo-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .btn-confirmar {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn-confirmar:hover {
+            background: #45a049;
+        }
+
+        .btn-cancelar {
+            width: 100%;
+            padding: 15px;
+            background: #e0e0e0;
+            color: #666;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="user-info">
+                <h2>💰 Panel de Caja</h2>
+                <p id="cajeroInfo">Cargando...</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="actions">
+            <h3>Pedidos para Cobrar</h3>
+            <button class="refresh-btn" onclick="cargarPedidos()">🔄 Actualizar</button>
+        </div>
+
+        <div class="pedidos-grid" id="pedidosGrid">
+            <div class="loading">Cargando pedidos...</div>
+        </div>
+    </div>
+
+    <!-- Modal de Pago -->
+    <div class="modal" id="pagoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Procesar Pago</h2>
+                <div id="pedidoInfo" style="color: #666; margin: 10px 0;"></div>
+                <div class="modal-total" id="totalPago">S/. 0.00</div>
+            </div>
+
+            <form id="formPago">
+                <div class="form-group">
+                    <label>Método de Pago</label>
+                    <div class="metodo-pago" id="metodosPago"></div>
+                </div>
+
+                <button type="submit" class="btn-confirmar">✅ Confirmar Pago</button>
+                <button type="button" class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://tu-app-name.fly.dev/api';
+        const token = localStorage.getItem('token');
+        const nombreCompleto = localStorage.getItem('nombreCompleto');
+
+        let mediosPago = [];
+        let pedidoSeleccionado = null;
+        let medioPagoSeleccionado = null;
+
+        if (!token || !['Cajero', 'Admin'].includes(localStorage.getItem('tipoUsuario'))) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('cajeroInfo').textContent = `Bienvenido, ${nombreCompleto}`;
+
+        async function cargarPedidos() {
+            try {
+                const response = await fetch(`${API_URL}/Pedidos/cajero/completados`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const pedidos = await response.json();
+                mostrarPedidos(pedidos);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('pedidosGrid').innerHTML = 
+                    '<div class="loading">Error al cargar pedidos</div>';
+            }
+        }
+
+        function mostrarPedidos(pedidos) {
+            const grid = document.getElementById('pedidosGrid');
+            
+            if (pedidos.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💳</div>
+                        <h3>No hay pedidos para cobrar</h3>
+                        <p>Los pedidos completados aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Separar completados y cancelados
+            const completados = pedidos.filter(p => p.estado === 'Completado');
+            const cancelados = pedidos.filter(p => p.estado === 'Cancelado');
+
+            grid.innerHTML = [...completados, ...cancelados].map(pedido => `
+                <div class="pedido-card ${pedido.estado === 'Cancelado' ? 'cancelado' : ''}">
+                    <div class="pedido-header">
+                        <div class="pedido-numero">${pedido.numeroPedido}</div>
+                        <div class="pedido-mesa">${pedido.numeroMesa}</div>
+                    </div>
+                    
+                    <div class="pedido-info">
+                        <div class="info-row">
+                            <span class="info-label">Hora:</span>
+                            <span class="info-value">${new Date(pedido.fechaHoraPedido).toLocaleTimeString()}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Estado:</span>
+                            <span class="badge ${pedido.estado === 'Completado' ? 'badge-completado' : 'badge-cancelado'}">
+                                ${pedido.estado === 'Completado' ? '✅ Listo' : '💳 Pagado'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="pedido-detalles">
+                        ${pedido.detalles.map(d => `
+                            <div class="detalle-item">
+                                <span>${d.productoNombre} x${d.cantidad}</span>
+                                <span>S/. ${d.subtotal.toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="pedido-total">S/. ${pedido.total.toFixed(2)}</div>
+
+                    ${pedido.estado === 'Completado' ? `
+                        <button class="btn-cobrar" onclick="abrirPago(${pedido.id}, ${pedido.total}, '${pedido.numeroPedido}', '${pedido.numeroMesa}')">
+                            💳 Cobrar
+                        </button>
+                    ` : `
+                        <div style="text-align: center; padding: 10px; color: #666;">
+                            ✅ Ya fue cobrado
+                        </div>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        async function cargarMediosPago() {
+            try {
+                const response = await fetch(`${API_URL}/Pagos/medios-pago`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                mediosPago = await response.json();
+                
+                const iconos = {
+                    'Efectivo': '💵',
+                    'Tarjeta': '💳',
+                    'Yape': '📱',
+                    'Plin': '💰'
+                };
+
+                document.getElementById('metodosPago').innerHTML = mediosPago.map(m => `
+                    <div class="metodo-btn" onclick="seleccionarMetodo(${m.id})">
+                        <div class="metodo-icon">${iconos[m.nombre] || '💳'}</div>
+                        <div>${m.nombre}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function seleccionarMetodo(medioPagoId) {
+            medioPagoSeleccionado = medioPagoId;
+            
+            document.querySelectorAll('.metodo-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            event.currentTarget.classList.add('selected');
+        }
+
+        async function abrirPago(pedidoId, total, numeroPedido, numeroMesa) {
+            pedidoSeleccionado = pedidoId;
+            medioPagoSeleccionado = null;
+            
+            document.getElementById('pedidoInfo').textContent = `${numeroPedido} - ${numeroMesa}`;
+            document.getElementById('totalPago').textContent = `S/. ${total.toFixed(2)}`;
+            
+            await cargarMediosPago();
+            
+            document.getElementById('pagoModal').classList.add('show');
+        }
+
+        document.getElementById('formPago').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!medioPagoSeleccionado) {
+                alert('Selecciona un método de pago');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/Pagos/procesar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        pedidoId: pedidoSeleccionado,
+                        medioPagoId: medioPagoSeleccionado,
+                        observaciones: ""
+                    })
+                });
+
+                if (response.ok) {
+                    alert('✅ Pago procesado exitosamente');
+                    cerrarModal();
+                    cargarPedidos();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'No se pudo procesar el pago'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        });
+
+        function cerrarModal() {
+            document.getElementById('pagoModal').classList.remove('show');
+            medioPagoSeleccionado = null;
+            document.querySelectorAll('.metodo-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        cargarPedidos();
+        setInterval(cargarPedidos, 20000); // Actualizar cada 20 segundos
+    </script>
+</body>
+</html>

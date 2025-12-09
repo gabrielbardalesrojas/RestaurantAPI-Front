@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocinero - Órdenes de Cocina</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #FF6B35;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn {
+            padding: 12px 24px;
+            background: #FF6B35;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .pedidos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .pedido-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 5px solid #FF6B35;
+        }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .pedido-numero {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .pedido-mesa {
+            background: #FF6B35;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .pedido-tiempo {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .productos-list {
+            margin-bottom: 20px;
+        }
+
+        .producto-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .producto-item.completado {
+            background: #d4edda;
+            opacity: 0.7;
+        }
+
+        .checkbox-custom {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .producto-info {
+            flex: 1;
+        }
+
+        .producto-nombre {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .producto-cantidad {
+            color: #FF6B35;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .producto-observaciones {
+            color: #666;
+            font-size: 13px;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .progreso-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progreso-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            transition: width 0.3s;
+        }
+
+        .progreso-text {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-preparacion {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="user-info">
+                <h2>👨‍🍳 Panel de Cocina</h2>
+                <p id="cocineroInfo">Cargando...</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="actions">
+            <h3>Órdenes Pendientes</h3>
+            <button class="refresh-btn" onclick="cargarPedidos()">🔄 Actualizar</button>
+        </div>
+
+        <div class="alert-success" id="alertSuccess">
+            <strong>✅ ¡Pedido completado!</strong> El pedido ha sido marcado como listo.
+        </div>
+
+        <div class="pedidos-grid" id="pedidosGrid">
+            <div class="loading">Cargando órdenes...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://tu-app-name.fly.dev/api';
+        const token = localStorage.getItem('token');
+        const nombreCompleto = localStorage.getItem('nombreCompleto');
+
+        if (!token || !['Cocinero', 'Admin'].includes(localStorage.getItem('tipoUsuario'))) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('cocineroInfo').textContent = `Bienvenido, ${nombreCompleto}`;
+
+        async function cargarPedidos() {
+            try {
+                const response = await fetch(`${API_URL}/Pedidos/cocinero/pendientes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const pedidos = await response.json();
+                mostrarPedidos(pedidos);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('pedidosGrid').innerHTML = 
+                    '<div class="loading">Error al cargar órdenes</div>';
+            }
+        }
+
+        function mostrarPedidos(pedidos) {
+            const grid = document.getElementById('pedidosGrid');
+            
+            if (pedidos.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✨</div>
+                        <h3>¡Todo al día!</h3>
+                        <p>No hay órdenes pendientes en este momento</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = pedidos.map(pedido => {
+                const completados = pedido.detalles.filter(d => d.completado).length;
+                const total = pedido.detalles.length;
+                const progreso = (completados / total) * 100;
+
+                return `
+                    <div class="pedido-card">
+                        <div class="pedido-header">
+                            <div class="pedido-numero">${pedido.numeroPedido}</div>
+                            <div class="pedido-mesa">${pedido.numeroMesa}</div>
+                        </div>
+                        
+                        <div class="pedido-tiempo">
+                            🕐 ${new Date(pedido.fechaHoraPedido).toLocaleTimeString()}
+                            <span class="badge ${pedido.estado === 'Pendiente' ? 'badge-pendiente' : 'badge-preparacion'}">
+                                ${pedido.estado}
+                            </span>
+                        </div>
+
+                        <div class="progreso-text">
+                            <strong>${completados} de ${total}</strong> productos listos
+                        </div>
+                        <div class="progreso-bar">
+                            <div class="progreso-fill" style="width: ${progreso}%"></div>
+                        </div>
+
+                        <div class="productos-list">
+                            ${pedido.detalles.map(detalle => `
+                                <div class="producto-item ${detalle.completado ? 'completado' : ''}">
+                                    <input 
+                                        type="checkbox" 
+                                        class="checkbox-custom"
+                                        ${detalle.completado ? 'checked' : ''}
+                                        onchange="marcarProducto(${detalle.id}, this.checked)"
+                                    >
+                                    <div class="producto-info">
+                                        <div class="producto-nombre">
+                                            ${detalle.completado ? '✅ ' : ''}${detalle.productoNombre}
+                                        </div>
+                                        <div class="producto-cantidad">Cantidad: x${detalle.cantidad}</div>
+                                        ${detalle.observaciones ? `
+                                            <div class="producto-observaciones">
+                                                📝 ${detalle.observaciones}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function marcarProducto(detalleId, completado) {
+            try {
+                const response = await fetch(`${API_URL}/Pedidos/cocinero/marcar-detalle`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        detallePedidoId: detalleId,
+                        completado: completado
+                    })
+                });
+
+                if (response.ok) {
+                    // Verificar si el pedido se completó
+                    const alertSuccess = document.getElementById('alertSuccess');
+                    
+                    // Recargar pedidos
+                    setTimeout(() => {
+                        cargarPedidos();
+                    }, 500);
+
+                    // Si se marcó como completado, mostrar alerta
+                    if (completado) {
+                        alertSuccess.classList.add('show');
+                        setTimeout(() => {
+                            alertSuccess.classList.remove('show');
+                        }, 3000);
+                    }
+                } else {
+                    alert('Error al actualizar el estado');
+                    // Revertir el checkbox
+                    event.target.checked = !completado;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+                event.target.checked = !completado;
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Cargar pedidos al iniciar
+        cargarPedidos();
+
+        // Auto-actualizar cada 15 segundos
+        setInterval(cargarPedidos, 15000);
+
+        // Sonido cuando hay nuevos pedidos (opcional)
+        let ultimaCantidad = 0;
+        setInterval(async () => {
+            try {
+                const response = await fetch(`${API_URL}/Pedidos/cocinero/pendientes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const pedidos = await response.json();
+                
+                if (pedidos.length > ultimaCantidad) {
+                    // Nuevo pedido - podrías agregar un sonido aquí
+                    console.log('¡Nuevo pedido recibido!');
+                }
+                ultimaCantidad = pedidos.length;
+            } catch (error) {
+                console.error('Error en auto-actualización:', error);
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
